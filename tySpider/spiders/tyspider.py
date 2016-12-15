@@ -67,7 +67,7 @@ class tianyaBBSspider(CrawlSpider):
                 real_article_url.append(article_url[i])
                 real_article_time.append(article_time[i])
         if len(real_article_url)==0:
-            exit()
+            return
         for url in real_article_url:
             # 拼接url
             urll = urljoin(self.baseurl, url)
