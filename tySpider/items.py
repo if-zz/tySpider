@@ -15,6 +15,7 @@ class TyspiderItem(scrapy.Item):
     article_name = scrapy.Field()
     article_url=scrapy.Field()
     article_description=scrapy.Field()
+    article_lenth=scrapy.Field()
     article_time = scrapy.Field()
     article_last_time=scrapy.Field()
     article_from = scrapy.Field()
@@ -25,13 +26,15 @@ class TyspiderItem(scrapy.Item):
     # 回帖表
     parent_reply_author =scrapy.Field()
     parent_reply_authorID = scrapy.Field()
-    parent_replyID = scrapy.Field()
+    # parent_replyID = scrapy.Field()
     parent_reply_time = scrapy.Field()
     parent_reply_content = scrapy.Field()
+    parent_reply_lenth=scrapy.Field()
     child_reply_author = scrapy.Field()
     child_reply_authorID = scrapy.Field()
     child_reply_time = scrapy.Field()
     child_reply_content = scrapy.Field()
+    child_reply_lenth=scrapy.Field()
     child_reply_num = scrapy.Field()#该回复的评论数
     pass
 

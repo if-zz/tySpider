@@ -114,13 +114,14 @@ class tianyaBBSspider(CrawlSpider):
         #处理回帖
         parent_reply_author=[]
         parent_reply_authorID=[]
-        parent_replyID=[]
+        parent_reply_lenth=[]
         parent_reply_time=[]
         parent_reply_content=[]
         child_reply_author = []
         child_reply_authorID = []
         child_reply_time = []
         child_reply_content = []
+        child_reply_lenth=[]
         child_reply_num=[]
         reply=sel.xpath('//div[@class="atl-main"]//div[@class="atl-item"]')
         for i_reply in reply:
@@ -131,8 +132,8 @@ class tianyaBBSspider(CrawlSpider):
             parent_reply_author.append(ireply_parent_author)
             ireply_parent_authorID=i_reply.xpath('@_hostid').extract()[0]
             parent_reply_authorID.append(ireply_parent_authorID)
-            ireply_ID=i_reply.xpath('@replyid').extract()[0]
-            parent_replyID.append(ireply_ID)
+            # ireply_ID=i_reply.xpath('@replyid').extract()[0]
+            # parent_replyID.append(ireply_ID)
             ireply_parent_time=i_reply.xpath("@js_restime").extract()[0]
             parent_reply_time.append(ireply_parent_time)
             ireply_parent_content=i_reply.xpath("div[2]/div[2]/div[1]/text()|"
@@ -146,7 +147,7 @@ class tianyaBBSspider(CrawlSpider):
             for pcontent in ireply_parent_content:
                 parent_content+=pcontent
             parent_reply_content.append(parent_content)
-
+            parent_reply_lenth.append(len(parent_content))
             ireply_child_author=i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li/@_username').extract()
             child_reply_author.append(ireply_child_author)
             ireply_child_athorID=i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li/@_userid').extract()
@@ -158,6 +159,7 @@ class tianyaBBSspider(CrawlSpider):
             #即对于每一条回复,都有一个对应的评论列表ireply_c_c
             ireply_child=i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li')
             ireply_c_c=[]
+            ireply_c_l=[]
             for ireply_child_c in ireply_child:
                 ireply_child_content=ireply_child_c.xpath('span/text()').extract()
                 for i in reversed(range(0, len(ireply_child_content))):
@@ -170,11 +172,14 @@ class tianyaBBSspider(CrawlSpider):
                 for chcontent in ireply_parent_content:
                     child_content += chcontent
                 ireply_c_c.append(child_content)
+                ireply_c_l.append(len(child_content))
             child_reply_content.append(ireply_c_c)
+            child_reply_lenth.append(ireply_c_l)
             child_reply_num.append(len(ireply_child_author))
 
         article_name = article_name[0].replace(u'_百姓声音_天涯论坛', '')
         description_content = content
+        article_lenth=len(description_content)
         article_url = article_url
         article_time = article_time
         article_author = article_author[0]
@@ -186,6 +191,7 @@ class tianyaBBSspider(CrawlSpider):
         print click_num, reply_num
         l.add_value('article_name', article_name)
         l.add_value('article_description', description_content)
+        l.add_value('article_lenth',article_lenth)
         l.add_value('article_url', article_url)
         l.add_value('article_time', article_time)
         l.add_value('article_last_time', article_last_time)
@@ -200,7 +206,7 @@ class tianyaBBSspider(CrawlSpider):
             request = scrapy.Request(urljoin(self.baseurl, next_page_reply[0]), callback=self.parse_more_reply)
             request.meta[" parent_reply_author"]=parent_reply_author
             request.meta["parent_reply_authorID"]=parent_reply_authorID
-            request.meta[" parent_replyID"]=parent_replyID
+            # request.meta[" parent_replyID"]=parent_replyID
             request.meta["parent_reply_time"]=parent_reply_time
             request.meta["parent_reply_content"]=parent_reply_content
             request.meta["child_reply_author"]=child_reply_author
@@ -208,12 +214,14 @@ class tianyaBBSspider(CrawlSpider):
             request.meta["child_reply_time"]=child_reply_time
             request.meta["child_reply_content"]=child_reply_content
             request.meta["child_reply_num"]=child_reply_num
+            request.meta["parent_reply_lenth"]=parent_reply_lenth
+            request.meta["child_reply_lenth"]=child_reply_lenth
             request.meta["l"]=l
             yield request
         else:
             l.add_value('parent_reply_author', parent_reply_author)
             l.add_value('parent_reply_authorID', parent_reply_authorID)
-            l.add_value('parent_replyID', parent_replyID)
+            # l.add_value('parent_replyID', parent_replyID)
             l.add_value('parent_reply_time', parent_reply_time)
             l.add_value('parent_reply_content', parent_reply_content)
             l.add_value('child_reply_author', child_reply_author)
@@ -221,13 +229,15 @@ class tianyaBBSspider(CrawlSpider):
             l.add_value('child_reply_time', child_reply_time)
             l.add_value('child_reply_content', child_reply_content)
             l.add_value('child_reply_num', child_reply_num)
+            l.add_value('parent_reply_lenth',parent_reply_lenth)
+            l.add_value('child_reply_lenth',child_reply_lenth)
             yield l.load_item()
 
     def parse_more_reply(self,response):
         sel = Selector(response)
         parent_reply_author = response.meta[" parent_reply_author"]
         parent_reply_authorID = response.meta["parent_reply_authorID"]
-        parent_replyID = response.meta[" parent_replyID"]
+        parent_reply_lenth = response.meta["parent_reply_lenth"]
         parent_reply_time = response.meta["parent_reply_time"]
         parent_reply_content = response. meta["parent_reply_content"]
         child_reply_author = response.meta["child_reply_author"]
@@ -235,6 +245,7 @@ class tianyaBBSspider(CrawlSpider):
         child_reply_time = response. meta["child_reply_time"]
         child_reply_content = response. meta["child_reply_content"]
         child_reply_num = response. meta["child_reply_num"]
+        child_reply_lenth=response.meta["child_reply_lenth"]
         l=response.meta["l"]
         reply = sel.xpath('//div[@class="atl-main"]//div[@class="atl-item"]')
         for i_reply in reply:
@@ -245,8 +256,8 @@ class tianyaBBSspider(CrawlSpider):
             parent_reply_author.append(ireply_parent_author)
             ireply_parent_authorID = i_reply.xpath('@_hostid').extract()[0]
             parent_reply_authorID.append(ireply_parent_authorID)
-            ireply_ID = i_reply.xpath('@replyid').extract()[0]
-            parent_replyID.append(ireply_ID)
+            # ireply_ID = i_reply.xpath('@replyid').extract()[0]
+            # parent_replyID.append(ireply_ID)
             ireply_parent_time = i_reply.xpath("@js_restime").extract()[0]
             parent_reply_time.append(ireply_parent_time)
             ireply_parent_content = i_reply.xpath("div[2]/div[2]/div[1]/text()|"
@@ -262,7 +273,7 @@ class tianyaBBSspider(CrawlSpider):
             for pcontent in ireply_parent_content:
                 parent_content += pcontent
             parent_reply_content.append(parent_content)
-
+            parent_reply_lenth.append(len(parent_content))
             ireply_child_author = i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li/@_username').extract()
             child_reply_author.append(ireply_child_author)
             ireply_child_athorID = i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li/@_userid').extract()
@@ -274,6 +285,7 @@ class tianyaBBSspider(CrawlSpider):
             # 即对于每一条回复,都有一个对应的评论列表ireply_c_c
             ireply_child = i_reply.xpath('div[2]/div[2]/div[3]/div[1]/ul//li')
             ireply_c_c = []
+            ireply_c_l=[]
             for ireply_child_c in ireply_child:
                 ireply_child_content = ireply_child_c.xpath('span/text()').extract()
                 for i in reversed(range(0, len(ireply_child_content))):
@@ -286,7 +298,9 @@ class tianyaBBSspider(CrawlSpider):
                 for chcontent in ireply_parent_content:
                     child_content += chcontent
                 ireply_c_c.append(child_content)
+                ireply_c_l.append(len(child_content))
             child_reply_content.append(ireply_c_c)
+            child_reply_lenth.append(ireply_c_l)
             child_reply_num.append(len(ireply_child_author))
 
         next_page_reply = sel.xpath('/div[3]/div[@id="doc"]/div[@id="bd"]/div[@class="clearfix"]/div[@class="atl-pages"]/form/a[@class="js-keyboard-next"]/@href').extract()
@@ -294,27 +308,31 @@ class tianyaBBSspider(CrawlSpider):
             request = scrapy.Request(urljoin(self.baseurl, next_page_reply[0]), callback=self.parse_more_reply)
             request.meta[" parent_reply_author"]=parent_reply_author
             request.meta["parent_reply_authorID"]=parent_reply_authorID
-            request.meta[" parent_replyID"]=parent_replyID
+            # request.meta[" parent_replyID"]=parent_replyID
             request.meta["parent_reply_time"]=parent_reply_time
             request.meta["parent_reply_content"]=parent_reply_content
+            request.meta["parent_reply_lenth"]=parent_reply_lenth
             request.meta["child_reply_author"]=child_reply_author
             request.meta["child_reply_authorID"]=child_reply_authorID
             request.meta["child_reply_time"]=child_reply_time
             request.meta["child_reply_content"]=child_reply_content
+            request.meta["child_reply_lenth"]=child_reply_lenth
             request.meta["child_reply_num"]=child_reply_num
             request.meta["l"]=l
             yield request
         else:
             l.add_value('parent_reply_author', parent_reply_author)
             l.add_value('parent_reply_authorID', parent_reply_authorID)
-            l.add_value('parent_replyID', parent_replyID)
+            # l.add_value('parent_replyID', parent_replyID)
             l.add_value('parent_reply_time', parent_reply_time)
             l.add_value('parent_reply_content', parent_reply_content)
+            l.add_value('parent_reply_lenth',parent_reply_lenth)
             l.add_value('child_reply_author', child_reply_author)
             l.add_value('child_reply_authorID', child_reply_authorID)
             l.add_value('child_reply_time', child_reply_time)
             l.add_value('child_reply_content', child_reply_content)
             l.add_value('child_reply_num', child_reply_num)
+            l.add_value('child_reply_lenth',child_reply_lenth)
             yield l.load_item()
 
 

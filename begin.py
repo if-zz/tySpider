@@ -35,7 +35,7 @@ def scheduler():
             p = multiprocessing.Process(target=run)
             p.start()
             p.join()
-            print (1/0)
+            # print (1/0)
             time.sleep(15) #seconds
         except Exception as e:
             # logging.exception(e)
