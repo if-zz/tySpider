@@ -169,7 +169,7 @@ class tianyaBBSspider(CrawlSpider):
                     if ireply_child_content[i] == '':
                         del ireply_child_content[i]
                 child_content = u''
-                for chcontent in ireply_parent_content:
+                for chcontent in ireply_child_content:
                     child_content += chcontent
                 ireply_c_c.append(child_content)
                 ireply_c_l.append(len(child_content))
@@ -295,7 +295,7 @@ class tianyaBBSspider(CrawlSpider):
                     if ireply_child_content[i] == '':
                         del ireply_child_content[i]
                 child_content = u''
-                for chcontent in ireply_parent_content:
+                for chcontent in ireply_child_content:
                     child_content += chcontent
                 ireply_c_c.append(child_content)
                 ireply_c_l.append(len(child_content))
@@ -395,7 +395,7 @@ class tianyaBBSspider(CrawlSpider):
     #                 if ireply_child_content[i] == '':
     #                     del ireply_child_content[i]
     #             child_content = u''
-    #             for chcontent in ireply_parent_content:
+    #             for chcontent in ireply_child_content:
     #                 child_content += chcontent
     #             ireply_c_c.append(child_content)
     #         child_reply_content.append(ireply_c_c)

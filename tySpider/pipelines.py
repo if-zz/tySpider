@@ -56,7 +56,8 @@ class TyspiderPipeline(object):
         if len(item["parent_reply_author"]):
             for i in xrange(0, len(item["parent_reply_author"])):
                 #先得到该回复帖集的帖子ID
-                main_id = self.cursor.execute("SELECT ID FROM main_table WHERE URL = '%s'" %  str(item["article_url"][0]))
+                self.cursor.execute("SELECT ID FROM main_table WHERE URL = '%s'" %  str(item["article_url"][0]))
+                main_id = self.cursor.fetchone()[0]
 
                 #数据库中是否已经存在该回复帖
                 parent_result = self.cursor.execute("SELECT* FROM reply_table WHERE postID = %d AND replierName = '%s' AND replyDate = '%s'" %
@@ -74,13 +75,16 @@ class TyspiderPipeline(object):
                     child_result = self.cursor.execute("SELECT* FROM reply_table WHERE parentID IS NULL AND replierName = '%s' AND replyDate = '%s'"%
                                                        (str(item["child_reply_author"][i][j]), str(item["child_reply_time"][i][j])))
                     if child_result==0:
-                        parent_id = self.cursor.execute("SELECT* FROM reply_table WHERE parentID = 0 AND replierName = '%s' AND replyDate = '%s'"%
+                        self.cursor.execute("SELECT ID FROM reply_table WHERE parentID = 0 AND replierName = '%s' AND replyDate = '%s'"%
                                                         (str(item["parent_reply_author"][i]), str(item["parent_reply_time"][i])))
+                        parent_id = self.cursor.fetchone()[0]
+                        print "parent_id************************",parent_id,main_id
                         self.cursor.execute("INSERT INTO reply_table VALUES(NULL,%d,%d,%d,'%s','%s','%s',0,%d,NULL)" %
                                             (int(parent_id), int(main_id), int(item["child_reply_authorID"][i][j]), str(item["child_reply_author"][i][j]),
                                              str(item["child_reply_content"][i][j]), str(item["child_reply_time"][i][j]), int(item["child_reply_lenth"][i][j])))
                         self.conn.commit()
                 # self.file2.write(reply_line)
+        self.conn.commit()
         return item
 
     def spider_closed(self, spider):
