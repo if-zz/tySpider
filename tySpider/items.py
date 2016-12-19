@@ -18,7 +18,6 @@ class TyspiderItem(scrapy.Item):
     article_lenth=scrapy.Field()
     article_time = scrapy.Field()
     article_last_time=scrapy.Field()
-    article_from = scrapy.Field()
     click_num = scrapy.Field()
     reply_num = scrapy.Field()
     article_author = scrapy.Field()

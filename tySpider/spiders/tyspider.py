@@ -204,7 +204,7 @@ class tianyaBBSspider(CrawlSpider):
                                   ).extract()
         if len(next_page_reply)!=0:
             request = scrapy.Request(urljoin(self.baseurl, next_page_reply[0]), callback=self.parse_more_reply)
-            request.meta[" parent_reply_author"]=parent_reply_author
+            request.meta["parent_reply_author"]=parent_reply_author
             request.meta["parent_reply_authorID"]=parent_reply_authorID
             # request.meta[" parent_replyID"]=parent_replyID
             request.meta["parent_reply_time"]=parent_reply_time
@@ -235,7 +235,7 @@ class tianyaBBSspider(CrawlSpider):
 
     def parse_more_reply(self,response):
         sel = Selector(response)
-        parent_reply_author = response.meta[" parent_reply_author"]
+        parent_reply_author = response.meta["parent_reply_author"]
         parent_reply_authorID = response.meta["parent_reply_authorID"]
         parent_reply_lenth = response.meta["parent_reply_lenth"]
         parent_reply_time = response.meta["parent_reply_time"]
@@ -306,7 +306,7 @@ class tianyaBBSspider(CrawlSpider):
         next_page_reply = sel.xpath('/div[3]/div[@id="doc"]/div[@id="bd"]/div[@class="clearfix"]/div[@class="atl-pages"]/form/a[@class="js-keyboard-next"]/@href').extract()
         if len(next_page_reply)!=0:
             request = scrapy.Request(urljoin(self.baseurl, next_page_reply[0]), callback=self.parse_more_reply)
-            request.meta[" parent_reply_author"]=parent_reply_author
+            request.meta["parent_reply_author"]=parent_reply_author
             request.meta["parent_reply_authorID"]=parent_reply_authorID
             # request.meta[" parent_replyID"]=parent_replyID
             request.meta["parent_reply_time"]=parent_reply_time
