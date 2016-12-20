@@ -6,6 +6,7 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import codecs
 import MySQLdb
+import time
 
 # 根据帖子是否为新加入旧帖子的更新流程
 class TyspiderPipeline(object):
@@ -16,8 +17,8 @@ class TyspiderPipeline(object):
         self.conn = MySQLdb.connect(host="127.0.0.1", user="root", passwd="123456", db="scrapy", port=3306, charset = "utf8")
         self.cursor = self.conn.cursor()
         try:
-            self.cursor.execute("CREATE TABLE main_table(ID BIGINT AUTO_INCREMENT,	URL TEXT,title NVARCHAR(200),authorID VARCHAR(20),author NVARCHAR(100),publishTime DATETIME,context TEXT,replyNum INT,viewNum INT,newstTime DATETIME,wordsNum INT,keyWords TEXT,eventID BIGINT,nameEntity TEXT,placeEntity TEXT,organizationEntity TEXT,PRIMARY KEY(ID));")
-            self.cursor.execute("CREATE TABLE reply_table(ID BIGINT AUTO_INCREMENT,parentID BIGINT,postID BIGINT,replierID VARCHAR(20) NOT NULL,replierName NVARCHAR(100) NOT NULL,content TEXT,replyDate DATETIME,commentNum INT DEFAULT '0',wordsNum INT,keyWords TEXT,PRIMARY KEY(ID),FOREIGN KEY(postID) REFERENCES main_table(ID) ON DELETE CASCADE ON UPDATE CASCADE);")
+            self.cursor.execute("CREATE TABLE main_table(ID BIGINT AUTO_INCREMENT,	URL TEXT,title NVARCHAR(200),authorID VARCHAR(20),author NVARCHAR(100),publishTime DATETIME,context TEXT,replyNum INT,viewNum INT,newstTime DATETIME,wordsNum INT,keyWords TEXT,eventID BIGINT,nameEntity TEXT,placeEntity TEXT,organizationEntity TEXT,PRIMARY KEY(ID))")
+            self.cursor.execute("CREATE TABLE reply_table(ID BIGINT AUTO_INCREMENT,parentID BIGINT,postID BIGINT,replierID VARCHAR(20) NOT NULL,replierName NVARCHAR(100) NOT NULL,content TEXT,replyDate DATETIME,commentNum INT DEFAULT '0',wordsNum INT,keyWords TEXT,PRIMARY KEY(ID),FOREIGN KEY(postID) REFERENCES main_table(ID) ON DELETE CASCADE ON UPDATE CASCADE)")
         except:
             pass
 
@@ -38,11 +39,15 @@ class TyspiderPipeline(object):
         result = self.cursor.execute("SELECT* FROM main_table WHERE URL = '%s'" % str(item["article_url"][0]))
 
         if result == 0:
+            # try:
             self.cursor.execute(
-                "INSERT INTO main_table VALUES(NULL,'%s','%s','%s','%s','%s','%s',%d,%d,'%s',%d,NULL,NULL,NULL,NULL,NULL)" % (
+                "INSERT INTO main_table VALUES(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NULL,NULL,NULL,NULL,NULL)", (
                     str(item["article_url"][0]), str(item["article_name"][0]), str(item["article_authorID"][0]),
                     str(item["article_author"][0]), str(item["article_time"][0]),str(item["article_description"][0]),
                     int(item["reply_num"][0]), int(item["click_num"][0]), str(item["article_last_time"][0] + ':00'), int(item["article_lenth"][0])))
+            # except:
+            #     print "article_url",item["article_url"][0],"article_name",item["article_name"][0],"article_authorID",item["article_authorID"][0],"article_author",item["article_author"][0],"article_time",item["article_time"][0],"article_description",item["article_description"][0]
+            #     time.sleep(120)
         else:
             self.cursor.execute(
                 "UPDATE main_table SET replyNum = %d, viewNum = %d, newstTime = '%s' WHERE URL = '%s'" % (
@@ -56,16 +61,28 @@ class TyspiderPipeline(object):
         if len(item["parent_reply_author"]):
             for i in xrange(0, len(item["parent_reply_author"])):
                 #先得到该回复帖集的帖子ID
-                self.cursor.execute("SELECT ID FROM main_table WHERE URL = '%s'" %  str(item["article_url"][0]))
+                self.cursor.execute("SELECT ID FROM main_table WHERE URL = '%s'" % str(item["article_url"][0]))
                 main_id = self.cursor.fetchone()[0]
 
                 #数据库中是否已经存在该回复帖
                 parent_result = self.cursor.execute("SELECT* FROM reply_table WHERE postID = %d AND replierName = '%s' AND replyDate = '%s'" %
                                                     (int(main_id), str(item["parent_reply_author"][i]), str(item["parent_reply_time"][i])))
                 if parent_result==0:
-                    self.cursor.execute("INSERT INTO reply_table VALUES(NULL,0,%d,%d,'%s','%s','%s',%d,%d,NULL)" %
-                                        (int(main_id), int(item["parent_reply_authorID"][i]), str(item["parent_reply_author"][i]), str(item["parent_reply_content"][i]),
-                                         str(item["parent_reply_time"][i]), int(str(item["child_reply_num"][i])), int(item["parent_reply_lenth"][i])))
+                    # try:
+                    self.cursor.execute("INSERT INTO reply_table VALUES(NULL,0,%s,%s,%s,%s,%s,%s,%s,NULL)",
+                                    (int(main_id), int(item["parent_reply_authorID"][i]), str(item["parent_reply_author"][i]), str(item["parent_reply_content"][i]),
+                                     str(item["parent_reply_time"][i]), int(str(item["child_reply_num"][i])), int(item["parent_reply_lenth"][i])))
+                    # except:
+                        # print "WARNING!WARNING!\r\n"
+                        # print "main_id",int(main_id),\
+                        #     "parent_reply_authorID",int(item["parent_reply_authorID"][i]),\
+                        #     "parent_reply_author", str(item["parent_reply_author"][i]),\
+                        #     "parent_reply_content", str(item["parent_reply_content"][i]),\
+                        #     "parent_reply_time:",str(item["parent_reply_time"][i]),\
+                        #     "child_reply_num",int(str(item["child_reply_num"][i])),\
+                        #     "parent+reply_lenth",int(item["parent_reply_lenth"][i])
+                        # print "LOOK!BUG IS HERE!"
+                        # time.sleep(60)
                 else:
                     self.cursor.execute("UPDATE reply_table SET commentNum = %d WHERE postID = %d AND replierName = '%s' AND replyDate = '%s' "%
                                         (int(item["child_reply_num"][i]),int(main_id), str(item["parent_reply_author"][i]), str(item["parent_reply_time"][i])))
@@ -78,8 +95,7 @@ class TyspiderPipeline(object):
                         self.cursor.execute("SELECT ID FROM reply_table WHERE parentID = 0 AND replierName = '%s' AND replyDate = '%s'"%
                                                         (str(item["parent_reply_author"][i]), str(item["parent_reply_time"][i])))
                         parent_id = self.cursor.fetchone()[0]
-                        print "parent_id************************",parent_id,main_id
-                        self.cursor.execute("INSERT INTO reply_table VALUES(NULL,%d,%d,%d,'%s','%s','%s',0,%d,NULL)" %
+                        self.cursor.execute("INSERT INTO reply_table VALUES(NULL,%s,%s,%s,%s,%s,%s,0,%s,NULL)",
                                             (int(parent_id), int(main_id), int(item["child_reply_authorID"][i][j]), str(item["child_reply_author"][i][j]),
                                              str(item["child_reply_content"][i][j]), str(item["child_reply_time"][i][j]), int(item["child_reply_lenth"][i][j])))
                         self.conn.commit()

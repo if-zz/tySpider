@@ -303,7 +303,7 @@ class tianyaBBSspider(CrawlSpider):
             child_reply_lenth.append(ireply_c_l)
             child_reply_num.append(len(ireply_child_author))
 
-        next_page_reply = sel.xpath('/div[3]/div[@id="doc"]/div[@id="bd"]/div[@class="clearfix"]/div[@class="atl-pages"]/form/a[@class="js-keyboard-next"]/@href').extract()
+        next_page_reply = sel.xpath('//body/div[not(@id)]/div[@id="doc"]/div[@id="bd"]/div[@id="post_head"]/div[3]/div[@class="atl-pages"]/form/a[@class="js-keyboard-next"]/@href').extract()
         if len(next_page_reply)!=0:
             request = scrapy.Request(urljoin(self.baseurl, next_page_reply[0]), callback=self.parse_more_reply)
             request.meta["parent_reply_author"]=parent_reply_author

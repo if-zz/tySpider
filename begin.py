@@ -11,32 +11,17 @@ def run():
     cmdline.execute("scrapy crawl tianya".split())
 
 
-#设定准确的时间
-# time_setting = "2016-12-14 21:35"
-
-
-#定时器1:在指定的时间（比如每天的九点）执行爬虫
-# while True:
-#     time_now = time.strftime("%Y-%m-%d %H:%M", time.localtime())
-#
-#     if time_now == time_setting:
-#         scrapy()    #或者输入命令行来跑scrapy
-#         time.sleep(10)
-#     else:
-#         time.sleep(10)
-#         print("Sleep!")
-
-
-#定时器2：每隔一定的时间执行一次爬虫
+#定时器：每隔一定的时间执行一次爬虫
 def scheduler():
     while True:
         try:
-            print "汤亦凡shi傻逼********************************************************************************"
+            print "********************************************************************************"
             p = multiprocessing.Process(target=run)
             p.start()
             p.join()
             # print (1/0)
-            time.sleep(15) #seconds
+            #此处设置运行间隔时间，一小时
+            time.sleep(3600) #seconds
         except Exception as e:
             # logging.exception(e)
             time_now = time.strftime("%Y%m%d %H %M", time.localtime())
